@@ -255,11 +255,18 @@ fn generate_struct_fields<P>(service: &Service, shape: &Shape, shape_name: &str,
 }
 
 fn to_camel_case(s: &str) -> String {
-    let s = s.replace(":", "_");
-    let s = s.replace("-", "_");
-    let s = s.replace(" ", "_");
+    let s = s.chars().map(|c| {
+        if c.is_alphanumeric() {
+            c
+        } else {
+            '_'
+        }
+    }).collect::<String>();
+    //let s = s.replace(":", "_");
+    //let s = s.replace("-", "_");
+    //let s = s.replace(" ", "_");
+    //let s = s.replace("/", "_");
     let s = s.replace("__", "_");
-    let s = s.replace("/", "_");
     s.split('_').flat_map(|word| word.chars().enumerate().map(|(i, c)|
         match (i, c) {
             (0, '0'...'9') => {
