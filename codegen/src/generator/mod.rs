@@ -159,6 +159,7 @@ where P: GenerateProtocol {
             ShapeType::Structure => parts.push(generate_struct(service, type_name, shape, protocol_generator)),
             ShapeType::Map => parts.push(generate_map(type_name, shape)),
             ShapeType::List => parts.push(generate_list(type_name, shape)),
+            _ if shape.shape_enum.is_some() => parts.push(generate_enum(type_name, shape)),
             shape_type => parts.push(generate_primitive_type(type_name, shape_type, protocol_generator.timestamp_type())),
         }
 
@@ -251,6 +252,46 @@ fn generate_struct_fields<P>(service: &Service, shape: &Shape, shape_name: &str,
 
         lines.join("\n")
     }).collect::<Vec<String>>().join("\n")
+}
+
+fn to_camel_case(s: &str) -> String {
+    let s = s.replace(":", "_");
+    let s = s.replace("-", "_");
+    let s = s.replace(" ", "_");
+    let s = s.replace("__", "_");
+    let s = s.replace("/", "_");
+    s.split('_').flat_map(|word| word.chars().enumerate().map(|(i, c)|
+        match (i, c) {
+            (0, '0'...'9') => {
+                let mut s = String::from("_");
+                s.push(c);
+                s
+            },
+            (0, _) => c.to_uppercase().collect::<String>(),
+            (_, '.') => String::from("_"),
+            (_, _) => c.to_lowercase().collect(),
+        }
+    )).collect::<Vec<_>>().concat()
+}
+
+fn generate_enum(enum_name: &str, shape: &Shape) -> String {
+    let variant_names = shape.shape_enum.clone().unwrap();
+    assert!(!variant_names.is_empty());
+
+    let mut variants_codegen = String::new();
+    for variant_name in variant_names {
+        variants_codegen += &format!(r#"
+            #[serde(rename="{}")]
+            {},
+        "#, variant_name, to_camel_case(&variant_name))
+    }
+
+    format!(r#"
+        #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+        pub enum {} {{
+            {}
+        }}
+    "#, enum_name, variants_codegen)
 }
 
 impl Operation {
