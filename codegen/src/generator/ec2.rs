@@ -170,7 +170,6 @@ fn generate_method_signature(operation: &Operation) -> String {
 
 fn generate_deserializer_body(name: &str, shape: &Shape) -> String {
     match shape.shape_type {
-        _ if shape.shape_enum.is_some() => "serde_json::from_str(&try!(characters(stack))).unwrap()",
         ShapeType::List => generate_list_deserializer(shape),
         ShapeType::Structure => generate_struct_deserializer(name, shape),
         _ => generate_primitive_deserializer(shape),
