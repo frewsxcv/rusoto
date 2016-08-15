@@ -58,6 +58,7 @@ impl GenerateProtocol for Ec2Generator {
 
         use param::{Params, ServiceParams};
 
+        use serde_json;
         use signature::SignedRequest;
         use xml::reader::events::XmlEvent;
         use xmlutil::{Next, Peek, XmlParseError, XmlResponse};
@@ -73,7 +74,7 @@ impl GenerateProtocol for Ec2Generator {
     }
 
     fn generate_struct_attributes(&self) -> String {
-        "#[derive(Debug, Default, Clone)]".to_owned()
+        "#[derive(Debug, Clone)]".to_owned()
     }
 
     fn generate_support_types(&self, name: &str, shape: &Shape, _service: &Service) -> Option<String> {
@@ -216,6 +217,7 @@ fn generate_list_deserializer(shape: &Shape) -> String {
 
 fn generate_primitive_deserializer(shape: &Shape) -> String {
     let statement =  match shape.shape_type {
+        _ if shape.shape_enum.is_some() => "serde_json::from_str(&try!(characters(stack))).unwrap()",
         ShapeType::String | ShapeType::Timestamp => "try!(characters(stack))",
         ShapeType::Integer => "i32::from_str(try!(characters(stack)).as_ref()).unwrap()",
         ShapeType::Long => "i64::from_str(try!(characters(stack)).as_ref()).unwrap()",
@@ -425,6 +427,7 @@ fn generate_struct_field_serializers(shape: &Shape) -> String {
 
 fn generate_primitive_serializer(shape: &Shape) -> String {
     let expression = match shape.shape_type {
+        _ if shape.shape_enum.is_some() => "&serde_json::to_string(&obj).unwrap()",
         ShapeType::String | ShapeType::Timestamp => "obj",
         ShapeType::Integer | ShapeType::Long | ShapeType::Float | ShapeType::Double | ShapeType::Boolean => "&obj.to_string()",
         ShapeType::Blob => "from_utf8(obj).unwrap()",

@@ -200,6 +200,7 @@ fn generate_map_deserializer(shape: &Shape) -> String {
 
 fn generate_primitive_deserializer(shape: &Shape) -> String {
     let statement =  match shape.shape_type {
+        _ if shape.shape_enum.is_some() => "serde_json::from_str(&try!(characters(stack))).unwrap()",
         ShapeType::String | ShapeType::Timestamp => "try!(characters(stack))",
         ShapeType::Integer => "i32::from_str(try!(characters(stack)).as_ref()).unwrap()",
         ShapeType::Double => "f32::from_str(try!(characters(stack)).as_ref()).unwrap()",
@@ -413,7 +414,7 @@ fn generate_struct_field_serializers(shape: &Shape) -> String {
 
 fn generate_primitive_serializer(shape: &Shape) -> String {
     let expression = match shape.shape_type {
-        _ if shape.shape_enum.is_some() => "serde_json::to_string(&obj).unwrap()",
+        _ if shape.shape_enum.is_some() => "&serde_json::to_string(&obj).unwrap()",
         ShapeType::String | ShapeType::Timestamp => "obj",
         ShapeType::Integer | ShapeType::Double | ShapeType::Boolean => "&obj.to_string()",
         ShapeType::Blob => "from_utf8(obj).unwrap()",
