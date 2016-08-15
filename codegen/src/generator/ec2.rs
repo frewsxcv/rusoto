@@ -74,7 +74,7 @@ impl GenerateProtocol for Ec2Generator {
     }
 
     fn generate_struct_attributes(&self) -> String {
-        "#[derive(Debug, Clone)]".to_owned()
+        "#[derive(Debug, Default, Clone)]".to_owned()
     }
 
     fn generate_support_types(&self, name: &str, shape: &Shape, _service: &Service) -> Option<String> {
@@ -170,6 +170,7 @@ fn generate_method_signature(operation: &Operation) -> String {
 
 fn generate_deserializer_body(name: &str, shape: &Shape) -> String {
     match shape.shape_type {
+        _ if shape.shape_enum.is_some() => "serde_json::from_str(&try!(characters(stack))).unwrap()",
         ShapeType::List => generate_list_deserializer(shape),
         ShapeType::Structure => generate_struct_deserializer(name, shape),
         _ => generate_primitive_deserializer(shape),
