@@ -55,6 +55,7 @@ impl GenerateProtocol for QueryGenerator {
     fn generate_prelude(&self, _: &Service) -> String {
         "use std::collections::HashMap;
         use std::str::{FromStr, from_utf8};
+        use serde_json;
         use xml::EventReader;
 
         use param::{Params, ServiceParams};
@@ -412,6 +413,7 @@ fn generate_struct_field_serializers(shape: &Shape) -> String {
 
 fn generate_primitive_serializer(shape: &Shape) -> String {
     let expression = match shape.shape_type {
+        _ if shape.shape_enum.is_some() => "serde_json::to_string(&obj).unwrap()",
         ShapeType::String | ShapeType::Timestamp => "obj",
         ShapeType::Integer | ShapeType::Double | ShapeType::Boolean => "&obj.to_string()",
         ShapeType::Blob => "from_utf8(obj).unwrap()",

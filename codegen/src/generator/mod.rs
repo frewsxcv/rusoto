@@ -294,7 +294,7 @@ fn generate_enum(enum_name: &str, shape: &Shape) -> String {
     }
 
     format!(r#"
-        #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+        #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
         pub enum {} {{
             {}
         }}
